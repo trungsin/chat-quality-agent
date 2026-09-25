@@ -122,6 +122,10 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 		}
 	}
 
+	// Ingest từ hệ thống ngoài (CRM, nền tảng chat, browser agent) — xác thực
+	// bằng ingest token của kênh webhook, không dùng JWT.
+	api.POST("/ingest/:channelId", handlers.IngestConversations)
+
 	// OAuth callbacks (public — platforms redirect here)
 	api.GET("/channels/zalo/callback", handlers.ZaloOAuthCallback)
 	api.GET("/channels/facebook/callback", handlers.FacebookOAuthCallback)

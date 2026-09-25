@@ -82,6 +82,12 @@ func handleToolsCall(c *gin.Context, params json.RawMessage) (interface{}, *RPCE
 	case "cqa_trigger_job":
 		jobID, _ := args["job_id"].(string)
 		return toolTriggerJob(tenantID, jobID)
+	case "cqa_ingest_conversation":
+		return toolIngestConversation(c.Request.Context(), userID, tenantID, args)
+	case "cqa_get_customer_profile":
+		return toolGetCustomerProfile(tenantID, args)
+	case "cqa_list_customers_by_tag":
+		return toolListCustomersByTag(tenantID, args)
 	default:
 		return nil, &RPCError{Code: -32602, Message: "Unknown tool: " + call.Name}
 	}

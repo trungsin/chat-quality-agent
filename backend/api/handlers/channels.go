@@ -31,7 +31,7 @@ import (
 var httpClientWithTimeout = &http.Client{Timeout: 30 * time.Second}
 
 type CreateChannelRequest struct {
-	ChannelType string          `json:"channel_type" binding:"required,oneof=zalo_oa facebook pancake"`
+	ChannelType string          `json:"channel_type" binding:"required,oneof=zalo_oa facebook pancake webhook"`
 	Name        string          `json:"name" binding:"required,min=2,max=255"`
 	Credentials json.RawMessage `json:"credentials" binding:"required"` // JSON: varies by type
 	Metadata    string          `json:"metadata"`
@@ -155,6 +155,26 @@ func CreateChannel(c *gin.Context) {
 		externalID = pkCreds.PageID
 	}
 
+	// Webhook: hệ thống ngoài đẩy dữ liệu vào bằng ingest token. Không nhập
+	// token thì tự sinh; token chỉ trả về đúng một lần trong response này.
+	ingestToken := ""
+	if req.ChannelType == channels.WebhookChannelType {
+		var whCreds channels.WebhookCredentials
+		_ = json.Unmarshal(req.Credentials, &whCreds)
+		if len(whCreds.IngestToken) < 32 {
+			if whCreds.IngestToken, err = channels.NewIngestToken(); err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "token_generation_failed"})
+				return
+			}
+		}
+		ingestToken = whCreds.IngestToken
+		credJSON, _ := json.Marshal(whCreds)
+		if credentialsToStore, err = pkg.Encrypt(credJSON, cfg.EncryptionKey); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "encryption_failed"})
+			return
+		}
+	}
+
 	now := time.Now()
 	channel := models.Channel{
 		ID:                   pkg.NewUUID(),
@@ -174,6 +194,14 @@ func CreateChannel(c *gin.Context) {
 		return
 	}
 
+	if ingestToken != "" {
+		c.JSON(http.StatusCreated, gin.H{
+			"channel":      channelToResponse(channel),
+			"ingest_token": ingestToken,
+			"ingest_url":   getBaseURL(c) + "/api/v1/ingest/" + channel.ID,
+		})
+		return
+	}
 	c.JSON(http.StatusCreated, channelToResponse(channel))
 }
 

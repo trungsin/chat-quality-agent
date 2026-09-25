@@ -26,6 +26,8 @@ func NewAdapter(channelType string, credentialsJSON []byte) (ChannelAdapter, err
 			return nil, fmt.Errorf("invalid pancake credentials: %w", err)
 		}
 		return NewPancakeAdapter(creds), nil
+	case WebhookChannelType:
+		return WebhookAdapter{}, nil
 	default:
 		return nil, fmt.Errorf("unsupported channel type: %s", channelType)
 	}

@@ -14,8 +14,9 @@ type InputSchema struct {
 }
 
 type Property struct {
-	Type        string `json:"type"`
-	Description string `json:"description"`
+	Type        string    `json:"type"`
+	Description string    `json:"description"`
+	Items       *Property `json:"items,omitempty"`
 }
 
 func handleToolsList() interface{} {
@@ -25,6 +26,10 @@ func handleToolsList() interface{} {
 }
 
 func getAllTools() []ToolDefinition {
+	return append(coreTools(), customerTools()...)
+}
+
+func coreTools() []ToolDefinition {
 	return []ToolDefinition{
 		{
 			Name:        "cqa_list_tenants",

@@ -12,13 +12,14 @@ Hệ thống phân tích chất lượng chăm sóc khách hàng bằng AI. Tự
 ## Tính năng
 
 - **Đồng bộ tin nhắn** từ Zalo OA, Facebook Messenger và Pancake
+- **Kênh Webhook / CRM** — CRM, nền tảng chat hoặc browser agent [jev-ultrafast](https://github.com/trungsin/jev-ultrafast) đẩy cuộc chat vào qua `POST /api/v1/ingest/:channelId` ([hướng dẫn](docs/usage/webhook-crm.md))
 - **Đánh giá chất lượng CSKH** bằng AI (Claude, Gemini, ChatGPT hoặc Grok) — Đạt/Không đạt, điểm 0-100, nhận xét chi tiết
 - **Phân loại chat** theo chủ đề tùy chỉnh (khiếu nại, góp ý, hỏi giá...)
 - **Cảnh báo tự động** qua Telegram và Email
 - **Batch AI mode** — gom nhiều cuộc chat/lần gọi AI, tiết kiệm chi phí
 - **Dashboard** với biểu đồ, thống kê, cảnh báo gần đây
 - **Multi-tenant** — nhiều công ty trên 1 hệ thống, phân quyền Owner > Admin > Member
-- **Tích hợp MCP** cho Claude Web/Desktop
+- **Tích hợp MCP** cho Claude Web/Desktop — gồm tool đẩy cuộc chat và hồ sơ/phân khúc khách hàng (`cqa_get_customer_profile`, `cqa_list_customers_by_tag`) để đồng bộ về CRM
 - **SSL tự động** qua Let's Encrypt (tùy chọn)
 
 ## Cài đặt nhanh

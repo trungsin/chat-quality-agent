@@ -12,6 +12,7 @@ export const CHANNEL_TYPES: ChannelTypeInfo[] = [
   { value: 'zalo_oa', label: 'Zalo OA', short: 'Zalo', icon: 'mdi-chat', color: 'green' },
   { value: 'facebook', label: 'Facebook Fanpage', short: 'FB', icon: 'mdi-facebook-messenger', color: 'blue' },
   { value: 'pancake', label: 'Pancake', short: 'Pancake', icon: 'mdi-forum', color: 'orange' },
+  { value: 'webhook', label: 'Webhook / CRM', short: 'Webhook', icon: 'mdi-webhook', color: 'teal' },
 ]
 
 export function channelTypeInfo(type: string): ChannelTypeInfo {

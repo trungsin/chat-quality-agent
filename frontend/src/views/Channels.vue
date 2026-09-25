@@ -81,7 +81,7 @@
         <v-select
           v-model="newChannel.channel_type"
           :label="$t('channel_type')"
-          :items="[{ title: $t('channel_zalo'), value: 'zalo_oa' }, { title: $t('channel_facebook'), value: 'facebook' }, { title: $t('channel_pancake'), value: 'pancake' }]"
+          :items="[{ title: $t('channel_zalo'), value: 'zalo_oa' }, { title: $t('channel_facebook'), value: 'facebook' }, { title: $t('channel_pancake'), value: 'pancake' }, { title: $t('channel_webhook'), value: 'webhook' }]"
           class="mb-3"
         />
         <v-text-field v-model="newChannel.name" :label="$t('channel_name')" class="mb-3" />
@@ -108,6 +108,14 @@
           <v-text-field v-model="newChannel.creds.page_access_token" :label="$t('pancake_page_token')" type="password" density="compact" class="mb-2" hint="Pancake: Cài đặt → Công cụ → Public API access token" persistent-hint />
         </template>
 
+        <!-- Webhook / CRM / Browser agent -->
+        <template v-else-if="newChannel.channel_type === 'webhook'">
+          <div class="text-caption text-grey-darken-1 mb-2">
+            <v-icon size="14" class="mr-1">mdi-information-outline</v-icon>
+            {{ $t('webhook_hint') }}
+          </div>
+        </template>
+
         <!-- Facebook -->
         <template v-else>
           <v-btn variant="tonal" color="info" prepend-icon="mdi-book-open-variant" href="https://tanviet12.github.io/chat-quality-agent/usage/facebook.html" target="_blank" class="mb-3">
@@ -118,6 +126,7 @@
         </template>
 
         <!-- Sync settings -->
+        <template v-if="newChannel.channel_type !== 'webhook'">
         <v-divider class="my-3" />
         <v-select
           v-model="newChannel.sync_interval"
@@ -139,6 +148,7 @@
           density="compact"
           color="primary"
         />
+        </template>
 
         <v-card-actions class="mt-4 px-0">
           <v-spacer />
@@ -162,6 +172,15 @@
             {{ $t('create') }}
           </v-btn>
           <v-btn
+            v-else-if="newChannel.channel_type === 'webhook'"
+            color="teal"
+            :loading="creating"
+            :disabled="!newChannel.name"
+            @click="createWebhook"
+          >
+            {{ $t('create') }}
+          </v-btn>
+          <v-btn
             v-else
             color="indigo"
             :loading="creating"
@@ -170,6 +189,20 @@
           >
             {{ $t('create') }}
           </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Ingest token: chỉ hiện một lần sau khi tạo kênh webhook -->
+    <v-dialog v-model="showIngest" max-width="640">
+      <v-card class="pa-6">
+        <v-card-title>{{ $t('webhook_created') }}</v-card-title>
+        <v-alert type="warning" variant="tonal" density="compact" class="mb-3">{{ $t('webhook_token_once') }}</v-alert>
+        <v-text-field :model-value="ingestInfo.url" label="Ingest URL" readonly density="compact" class="mb-2" />
+        <v-text-field :model-value="ingestInfo.token" label="Ingest token" readonly density="compact" class="mb-2" />
+        <v-card-actions class="px-0">
+          <v-spacer />
+          <v-btn color="primary" @click="showIngest = false">OK</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -229,6 +262,9 @@ const reauthing = ref('')
 const snackbar = ref(false)
 const snackText = ref('')
 const snackColor = ref('success')
+
+const showIngest = ref(false)
+const ingestInfo = reactive({ url: '', token: '' })
 
 const newChannel = reactive({
   channel_type: 'zalo_oa',
@@ -343,6 +379,29 @@ async function createPancake() {
   } catch (e: any) {
     const code = e?.response?.data?.error
     showSnack(code === 'pancake_connection_failed' ? t('pancake_connection_failed') : t('error'), 'error')
+  } finally {
+    creating.value = false
+  }
+}
+
+async function createWebhook() {
+  creating.value = true
+  try {
+    const created = await channelStore.createChannel(tenantId.value, {
+      channel_type: 'webhook',
+      name: newChannel.name,
+      credentials: {},
+      metadata: JSON.stringify({ source: 'webhook' }),
+    })
+    showDialog.value = false
+    newChannel.name = ''
+    newChannel.creds = {}
+    ingestInfo.url = created?.ingest_url || ''
+    ingestInfo.token = created?.ingest_token || ''
+    showIngest.value = true
+    await channelStore.fetchChannels(tenantId.value)
+  } catch {
+    showSnack(t('error'), 'error')
   } finally {
     creating.value = false
   }

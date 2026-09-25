@@ -1,7 +1,9 @@
 package channels
 
 import (
+	"context"
 	"testing"
+	"time"
 )
 
 func TestNewAdapterZaloOA(t *testing.T) {
@@ -37,5 +39,23 @@ func TestNewAdapterInvalidJSON(t *testing.T) {
 	_, err := NewAdapter("zalo_oa", []byte("not json"))
 	if err == nil {
 		t.Fatal("Should fail for invalid JSON")
+	}
+}
+
+func TestWebhookAdapterAndToken(t *testing.T) {
+	a, err := NewAdapter(WebhookChannelType, []byte(`{}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if convs, err := a.FetchRecentConversations(context.Background(), time.Time{}, 10); err != nil || convs != nil {
+		t.Fatal("webhook adapter must not pull anything")
+	}
+	tok, err := NewIngestToken()
+	if err != nil || len(tok) < 32 {
+		t.Fatalf("bad token %q %v", tok, err)
+	}
+	creds := WebhookCredentials{IngestToken: tok}
+	if !creds.Matches(tok) || creds.Matches(tok+"x") || creds.Matches("") || (WebhookCredentials{}).Matches("") {
+		t.Fatal("token comparison is wrong")
 	}
 }
