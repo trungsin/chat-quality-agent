@@ -1,0 +1,38 @@
+services:
+  mediamtx:
+    # The -ffmpeg image ships ffmpeg, needed for restreaming (runOnReady).
+    image: bluenviron/mediamtx:latest-ffmpeg
+    restart: unless-stopped
+    volumes:
+      - ./mediamtx.yml:/mediamtx.yml:ro
+    environment:
+      # Public IP or domain of this server, for WebRTC from outside the LAN.
+      MTX_WEBRTCADDITIONALHOSTS: ${PUBLIC_HOST:-}
+    ports:
+      - "8554:8554"       # RTSP (VLC, other VMS)
+      - "1935:1935"       # RTMP ingest from drones / OBS
+      - "8888:8888"       # HLS
+      - "8889:8889"       # WebRTC (multiview in browser)
+      - "8189:8189/udp"   # WebRTC media
+      - "8890:8890/udp"   # SRT ingest
+      # 9997 (API) is intentionally not published.
+
+  camerahub:
+    build: .
+    restart: unless-stopped
+    depends_on: [mediamtx]
+    volumes:
+      - ./data:/app/data
+    environment:
+      MTX_API: http://mediamtx:9997
+      HUB_PUBLIC_HOST: ${PUBLIC_HOST:-localhost}
+      HUB_ADMIN_USER: ${HUB_ADMIN_USER:-admin}
+      HUB_ADMIN_PASSWORD: ${HUB_ADMIN_PASSWORD:?Đặt HUB_ADMIN_PASSWORD trong file .env}
+      IMOU_APP_ID: ${IMOU_APP_ID:-}
+      IMOU_APP_SECRET: ${IMOU_APP_SECRET:-}
+      IMOU_API_URL: ${IMOU_API_URL:-https://openapi.easy4ip.com/openapi}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
+      TZ: Asia/Ho_Chi_Minh
+    ports:
+      - "8080:8080"
