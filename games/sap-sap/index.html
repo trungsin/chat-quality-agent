@@ -1,0 +1,983 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>body{margin:0}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Sắp Sập</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;800&family=JetBrains+Mono:wght@500;700&family=Patrick+Hand&display=swap">
+<style>
+/* Layout: control-room board — a dotted canvas where traffic flows left→right (top→bottom on phones), tool rails around it. */
+:root{
+  --bg:#e9edf2; --surface:#ffffff; --surface-2:#f3f5f8; --board:#f9fafc; --grid:#cfd6df;
+  --ink:#17202a; --ink-2:#56616f; --line:#d3d9e1;
+  --accent:#2f56e0; --accent-ink:#ffffff; --ok:#16905f; --warn:#c77d00; --bad:#d93a27; --bad-soft:#fde4e0; --ok-soft:#dcf3e8;
+  --c-users:#5a6574; --c-edge:#12946b; --c-compute:#2f56e0; --c-data:#7347cc; --c-cache:#c97f00; --c-async:#0d8599; --c-ai:#cc3a78;
+  --f-display:"Be Vietnam Pro",system-ui,sans-serif; --f-body:"Be Vietnam Pro",system-ui,sans-serif; --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  --f-hand:"Patrick Hand","Comic Sans MS",cursive;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0d1218; --surface:#151c25; --surface-2:#1b2430; --board:#111821; --grid:#2a3644;
+  --ink:#e5eaf0; --ink-2:#98a4b3; --line:#29333f;
+  --accent:#7290ff; --accent-ink:#0b1020; --ok:#3cc98d; --warn:#f0aa2c; --bad:#ff6b57; --bad-soft:#3a1d1a; --ok-soft:#14332a;
+  --c-users:#9aa6b4; --c-edge:#3cc79a; --c-compute:#7290ff; --c-data:#a986f0; --c-cache:#f0aa2c; --c-async:#37bdd1; --c-ai:#f070a6;
+  color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#0d1218; --surface:#151c25; --surface-2:#1b2430; --board:#111821; --grid:#2a3644;
+  --ink:#e5eaf0; --ink-2:#98a4b3; --line:#29333f;
+  --accent:#7290ff; --accent-ink:#0b1020; --ok:#3cc98d; --warn:#f0aa2c; --bad:#ff6b57; --bad-soft:#3a1d1a; --ok-soft:#14332a;
+  --c-users:#9aa6b4; --c-edge:#3cc79a; --c-compute:#7290ff; --c-data:#a986f0; --c-cache:#f0aa2c; --c-async:#37bdd1; --c-ai:#f070a6;
+  color-scheme:dark }
+body[data-mode="light"]{
+  --bg:#e9edf2; --surface:#ffffff; --surface-2:#f3f5f8; --board:#f9fafc; --grid:#cfd6df;
+  --ink:#17202a; --ink-2:#56616f; --line:#d3d9e1;
+  --accent:#2f56e0; --accent-ink:#ffffff; --ok:#16905f; --warn:#c77d00; --bad:#d93a27; --bad-soft:#fde4e0; --ok-soft:#dcf3e8;
+  --c-users:#5a6574; --c-edge:#12946b; --c-compute:#2f56e0; --c-data:#7347cc; --c-cache:#c97f00; --c-async:#0d8599; --c-ai:#cc3a78;
+  color-scheme:light }
+body[data-mode="dark"]{
+  --bg:#0d1218; --surface:#151c25; --surface-2:#1b2430; --board:#111821; --grid:#2a3644;
+  --ink:#e5eaf0; --ink-2:#98a4b3; --line:#29333f;
+  --accent:#7290ff; --accent-ink:#0b1020; --ok:#3cc98d; --warn:#f0aa2c; --bad:#ff6b57; --bad-soft:#3a1d1a; --ok-soft:#14332a;
+  --c-users:#9aa6b4; --c-edge:#3cc79a; --c-compute:#7290ff; --c-data:#a986f0; --c-cache:#f0aa2c; --c-async:#37bdd1; --c-ai:#f070a6;
+  color-scheme:dark }
+
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+body.sketch{--f-display:var(--f-hand);--f-body:var(--f-hand);font-size:17px}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,[tabindex]:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 14px;font-weight:600;display:inline-flex;align-items:center;gap:8px}
+.btn:hover{border-color:var(--ink-2)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.run{padding:10px 22px;font-size:16px;letter-spacing:.02em}
+.btn.danger{color:var(--bad)}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.eyebrow{font-size:11.5px;text-transform:uppercase;letter-spacing:.12em;color:var(--ink-2);font-weight:600}
+body.sketch .eyebrow{font-size:14px;letter-spacing:.06em}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface)}
+.seg button{border:0;background:none;padding:7px 12px;font-weight:600;color:var(--ink-2)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
+
+/* ---------- HOME ---------- */
+#home{padding-block:28px 48px}
+.hero{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:28px;align-items:end;margin-bottom:28px}
+.brand{font-family:var(--f-display);font-weight:800;font-size:clamp(44px,8vw,84px);line-height:.92;letter-spacing:-.035em;margin:6px 0 12px}
+.brand .crack{color:var(--bad);display:inline-block;transform:rotate(-4deg) translateY(2px)}
+body.sketch .brand{letter-spacing:0;font-weight:400}
+.tag{font-size:18px;color:var(--ink-2);max-width:34ch;margin:0;text-wrap:balance}
+.rank{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px 20px;display:grid;gap:10px}
+.rank h3{margin:0;font-family:var(--f-display);font-size:24px;font-weight:800;letter-spacing:-.01em}
+.bar{height:8px;border-radius:99px;background:var(--surface-2);overflow:hidden;border:1px solid var(--line)}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:99px}
+.rank-row{display:flex;justify-content:space-between;gap:12px;font-size:13px;color:var(--ink-2);flex-wrap:wrap}
+.how{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:32px}
+.how div{border-top:2px solid var(--ink);padding-top:10px}
+.how b{display:block;font-family:var(--f-display);font-size:16px}
+.how p{margin:2px 0 0;color:var(--ink-2);font-size:14px}
+.world{margin-bottom:26px}
+.world-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.world-head h2{margin:0;font-family:var(--f-display);font-size:22px;font-weight:800;letter-spacing:-.01em}
+.world-head p{margin:0;color:var(--ink-2);font-size:14px}
+.levels{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.lv{text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:14px;padding:14px 16px;display:grid;gap:4px;min-width:0}
+.lv:hover:not([disabled]){border-color:var(--accent)}
+.lv .n{font-family:var(--f-mono);font-size:12px;color:var(--ink-2);display:flex;gap:8px;align-items:center}
+.lv .t{font-weight:700;font-size:16px;font-family:var(--f-display)}
+.lv .st{color:var(--warn);letter-spacing:2px;font-size:15px}
+.lv .st .off{color:var(--line)}
+.lockmsg{color:var(--ink-2);letter-spacing:0;font-size:13px}
+.lv.boss{background:linear-gradient(var(--surface),var(--surface)) padding-box,repeating-linear-gradient(135deg,var(--bad) 0 6px,transparent 6px 12px) border-box;border:2px solid transparent}
+.lv[disabled]{opacity:.55;cursor:not-allowed}
+.pill{font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:2px 7px;border-radius:99px;background:var(--bad-soft);color:var(--bad)}
+.locked-world{border:1px dashed var(--line);border-radius:14px;padding:16px;color:var(--ink-2);font-size:14px}
+.badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.badge{border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--surface);display:grid;gap:2px;min-width:0}
+.badge b{font-size:14px}
+.badge span{font-size:12.5px;color:var(--ink-2)}
+.badge.off{opacity:.45;background:transparent}
+.medal{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:12px;color:#fff;margin-bottom:4px}
+.settings{display:flex;flex-wrap:wrap;gap:18px 28px;align-items:center;border-top:1px solid var(--line);padding-top:18px;margin-top:32px}
+.settings label{display:flex;gap:10px;align-items:center;font-size:14px;color:var(--ink-2)}
+.confirm{display:inline-flex;gap:8px;align-items:center;font-size:14px}
+
+/* ---------- GAME ---------- */
+#game{height:100%;display:grid;grid-template-rows:auto minmax(0,1fr)}
+.top{margin:0;max-width:none;display:flex;align-items:center;gap:14px;padding-block:10px;border-bottom:1px solid var(--line);background:var(--surface);flex-wrap:wrap}
+.top .title{min-width:0;flex:1}
+.top .title .eyebrow{display:block}
+.top h1{margin:0;font-family:var(--f-display);font-size:20px;font-weight:800;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meter{display:grid;gap:4px;min-width:180px}
+.meter .row{display:flex;justify-content:space-between;font-size:13px;gap:10px}
+.meter .row b{font-size:16px}
+.meter.over .row b{color:var(--bad)}
+.meter.over .bar i{background:var(--bad)}
+.main{display:grid;grid-template-columns:196px minmax(0,1fr) 300px;min-height:0}
+.rail{border-right:1px solid var(--line);background:var(--surface);overflow:auto;padding:14px 12px;display:grid;align-content:start;gap:8px}
+.side{border-left:1px solid var(--line);background:var(--surface);overflow:auto;padding:16px;display:grid;align-content:start;gap:18px}
+.pal{display:grid;grid-template-columns:30px minmax(0,1fr);gap:2px 10px;align-items:center;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:8px 10px;touch-action:none;user-select:none;-webkit-user-select:none}
+.pal:hover{border-color:var(--accent)}
+.pal .chip{grid-row:span 2;width:30px;height:30px;border-radius:9px;display:grid;place-items:center;color:#fff}
+.pal .chip svg{width:18px;height:18px}
+.pal b{font-size:13.5px;line-height:1.2}
+.pal small{font-size:11.5px;color:var(--ink-2);font-family:var(--f-mono)}
+body.sketch .pal small{font-family:var(--f-hand);font-size:14px}
+.stage{position:relative;min-width:0;min-height:0;display:grid;place-items:center;padding:14px;overflow:hidden}
+.board-wrap{position:relative;width:100%;max-height:100%;border-radius:16px;overflow:hidden;border:1px solid var(--line);background:var(--board)}
+#board{display:block;width:100%;height:100%;touch-action:none;user-select:none;-webkit-user-select:none}
+.empty-hint{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);font-size:13px;color:var(--ink-2);background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:6px 14px;pointer-events:none;white-space:nowrap;max-width:calc(100% - 24px);overflow:hidden;text-overflow:ellipsis}
+.panel h3{margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:var(--ink-2);font-weight:600}
+body.sketch .panel h3{font-size:15px;letter-spacing:.05em}
+.story{margin:0;font-size:14px;color:var(--ink)}
+.traffic{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:10px}
+.traffic div{background:var(--surface-2);border-radius:10px;padding:6px 10px;font-size:12px;color:var(--ink-2)}
+.traffic div b{display:block;font-family:var(--f-mono);font-size:15px;color:var(--ink)}
+.spike{margin-top:8px;font-size:12.5px;color:var(--warn);font-weight:600}
+.goals{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.goals li{display:grid;grid-template-columns:22px minmax(0,1fr);gap:8px;font-size:14px;align-items:start}
+.goals .dot{width:18px;height:18px;border-radius:50%;border:2px solid var(--line);margin-top:2px;display:grid;place-items:center;font-size:11px;font-weight:800}
+.goals .ok .dot{background:var(--ok);border-color:var(--ok);color:#fff}
+.goals .no .dot{background:var(--bad);border-color:var(--bad);color:#fff}
+.starline{font-size:12.5px;color:var(--ink-2);margin-top:8px}
+.insp{border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;gap:10px;background:var(--surface-2)}
+.insp-head{display:flex;gap:10px;align-items:center}
+.insp-head .chip{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;color:#fff;flex:none}
+.insp-head .chip svg{width:20px;height:20px}
+.insp-head b{font-size:16px;font-family:var(--f-display)}
+.insp p{margin:0;font-size:13.5px;color:var(--ink-2)}
+.tiers{display:grid;gap:6px}
+.tier{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:7px 10px;display:flex;justify-content:space-between;gap:8px;font-size:13px;text-align:left}
+.tier[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.tier span{color:var(--ink-2);font-family:var(--f-mono);font-size:12px}
+.stepper{display:flex;align-items:center;gap:10px;font-size:14px}
+.stepper button{width:34px;height:34px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-size:18px;font-weight:700}
+.stepper b{min-width:2ch;text-align:center;font-size:18px}
+.live{font-size:13px;font-family:var(--f-mono);padding:6px 10px;border-radius:8px;background:var(--surface)}
+.live.bad{color:var(--bad);background:var(--bad-soft)}
+.hints{display:grid;gap:6px}
+.hint{border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:13.5px;text-align:left;background:var(--surface);display:grid;gap:2px}
+.hint b{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-2)}
+.hint.locked{color:var(--ink-2);background:transparent;border-style:dashed;cursor:default}
+.hint.open{background:var(--surface-2)}
+.inline-confirm{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:13px;color:var(--bad)}
+.mobile-goals{display:none}
+.bottom{display:none}
+.sheet-close{display:none}
+
+/* SVG board */
+.dotgrid{fill:var(--grid)}
+.edge{fill:none;stroke:var(--ink-2);stroke-width:2;opacity:.55}
+.edge.live{stroke:var(--accent);opacity:.9}
+.edge.sel{stroke:var(--accent);opacity:1;stroke-width:3}
+.edge-hit{fill:none;stroke:transparent;stroke-width:16;cursor:pointer}
+.arrow{fill:var(--ink-2)}
+.edge-x circle{fill:var(--bad)}
+.edge-x path{stroke:#fff;stroke-width:2.2;stroke-linecap:round}
+.temp{fill:none;stroke:var(--accent);stroke-width:2;stroke-dasharray:6 5}
+.nd{cursor:grab}
+.nd-box{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
+.nd-stack{fill:var(--surface);stroke:var(--line);stroke-width:1.2}
+.nd.sel .nd-box{stroke:var(--accent);stroke-width:2.5}
+.nd.over .nd-box{stroke:var(--bad);stroke-width:3}
+.nd.over .nd-box{animation:throb .8s ease-in-out infinite alternate}
+@keyframes throb{to{stroke-width:5}}
+.nd.okrun .nd-box{stroke:var(--ok);stroke-width:2}
+.nd-name{font-family:var(--f-body);font-weight:700;font-size:13px;fill:var(--ink)}
+.nd-sub{font-family:var(--f-mono);font-size:11px;fill:var(--ink-2)}
+body.sketch .nd-name{font-size:16px;font-weight:400}
+body.sketch .nd-sub{font-family:var(--f-hand);font-size:14px}
+.nd-ic{fill:none;stroke:#fff;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.nd-load{font-family:var(--f-mono);font-size:11.5px;font-weight:700;fill:var(--ok)}
+.nd.over .nd-load{fill:var(--bad)}
+.port{fill:var(--surface);stroke:var(--accent);stroke-width:2.5;cursor:crosshair}
+.port:hover{fill:var(--accent)}
+.port-hit{fill:transparent;cursor:crosshair}
+.lock{fill:var(--ink-2);font-size:10px;font-family:var(--f-mono)}
+.stamp rect{fill:var(--bad)}
+.stamp text{fill:#fff;font-family:var(--f-mono);font-weight:700;font-size:13px;letter-spacing:.14em}
+.cat-users{fill:var(--c-users);background:var(--c-users)}
+.cat-edge{fill:var(--c-edge);background:var(--c-edge)}
+.cat-compute{fill:var(--c-compute);background:var(--c-compute)}
+.cat-data{fill:var(--c-data);background:var(--c-data)}
+.cat-cache{fill:var(--c-cache);background:var(--c-cache)}
+.cat-async{fill:var(--c-async);background:var(--c-async)}
+.cat-ai{fill:var(--c-ai);background:var(--c-ai)}
+.pk{fill:var(--accent)}
+.pk.bad{fill:var(--bad)}
+body.sketch .nd-box,body.sketch .nd-stack,body.sketch .edge,body.sketch .nd-chip,body.sketch .stamp rect{filter:url(#rough)}
+body.sketch .nd-box{stroke-width:2;stroke:var(--ink)}
+body.sketch .edge{stroke:var(--ink);opacity:.8}
+
+/* modal + toast */
+.scrim{position:fixed;inset:0;background:rgba(10,14,20,.45);display:grid;place-items:center;padding:16px;z-index:40}
+.modal{background:var(--surface);border-radius:20px;border:1px solid var(--line);max-width:460px;width:100%;padding:24px;display:grid;gap:14px;max-height:calc(100% - 32px);overflow:auto}
+.verdict{font-family:var(--f-mono);font-weight:700;font-size:30px;letter-spacing:.08em;margin:0}
+.verdict.pass{color:var(--ok)}
+.verdict.fail{color:var(--bad)}
+.verdict .st{color:var(--warn);letter-spacing:4px}
+.reasons{margin:0;padding:0;list-style:none;display:grid;gap:6px}
+.reasons li{font-size:14px;padding:8px 12px;border-radius:10px;background:var(--bad-soft)}
+.reasons li:first-child{font-weight:700}
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.stats div{background:var(--surface-2);border-radius:12px;padding:8px 12px;font-size:12.5px;color:var(--ink-2)}
+.stats b{display:block;font-size:18px;color:var(--ink);font-family:var(--f-mono)}
+.modal .acts{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.unlock{font-size:13.5px;color:var(--accent);font-weight:600}
+#toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--surface);padding:10px 16px;border-radius:12px;font-size:14px;z-index:50;max-width:calc(100% - 32px);text-align:center}
+.ghost{position:fixed;z-index:60;pointer-events:none;transform:translate(-50%,-50%);opacity:.9}
+
+@media (max-width: 1000px){
+  .main{grid-template-columns:170px minmax(0,1fr) 260px}
+}
+@media (max-width: 820px){
+  .hero{grid-template-columns:minmax(0,1fr)}
+  .levels{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .how{grid-template-columns:minmax(0,1fr)}
+  #game{height:auto;min-height:100%;grid-template-rows:auto auto auto auto auto}
+  .top .meter,.top .run-top{display:none}
+  .main{display:block}
+  .side{display:none}
+  .mobile-goals{display:block;margin:0;max-width:none;border-bottom:1px solid var(--line);background:var(--surface)}
+  .mobile-goals summary{padding-block:10px;font-weight:600;font-size:14px;cursor:pointer}
+  .mobile-goals .inner{padding-bottom:14px;display:grid;gap:14px}
+  .stage{padding:10px max(10px,env(safe-area-inset-left,0px))}
+  .rail{border:0;border-top:1px solid var(--line);display:flex;overflow-x:auto;padding:10px max(16px,env(safe-area-inset-left,0px)) 10px max(16px,env(safe-area-inset-left,0px))}
+  .pal{flex:none;width:150px}
+  .bottom{display:flex;position:sticky;bottom:0;z-index:20;gap:12px;align-items:center;background:var(--surface);border-top:1px solid var(--line);padding:10px max(16px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+  .bottom .meter{flex:1;min-width:0}
+  .sheet{position:fixed;left:0;right:0;bottom:0;z-index:30;max-height:70%;overflow:auto;background:var(--surface);border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:16px max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));box-shadow:0 -10px 30px rgba(0,0,0,.18)}
+  .sheet .insp{border:0;padding:0;background:none}
+  .sheet-close{display:inline-flex}
+  #toast{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+}
+@media (max-width: 480px){ .levels{grid-template-columns:minmax(0,1fr)} }
+@media (prefers-reduced-motion: reduce){ .nd.over .nd-box{animation:none} }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <filter id="rough" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="7"/>
+      <feDisplacementMap in="SourceGraphic" scale="3.2"/>
+    </filter>
+  </defs>
+</svg>
+
+<div id="app"></div>
+<div id="toast" hidden></div>
+
+<script>
+// SIM-START
+const TYPES = {
+  users:   {name:'Người dùng', cat:'users', desc:'Nguồn traffic của đề. Không xoá được.', tiers:null},
+  cdn:     {name:'CDN', cat:'edge', desc:'Phục vụ file tĩnh (ảnh, JS, CSS) ngay ở biên mạng. Static dừng ở đây, phần còn lại đi tiếp vào trong.', tiers:[{k:'Chuẩn',cap:20000,price:35}]},
+  lb:      {name:'Load Balancer', cat:'compute', desc:'Chia đều request cho các App Server phía sau. App chạy nhiều máy thì phải có LB đứng trước.', tiers:[{k:'Chuẩn',cap:6000,price:25}]},
+  app:     {name:'App Server', cat:'compute', desc:'Chạy code của bạn. Gánh mọi request đi qua, tự trả file tĩnh, gửi đọc / ghi / câu hỏi AI đi tiếp.', tiers:[{k:'S',cap:500,price:40},{k:'M',cap:1000,price:90},{k:'L',cap:2000,price:200}], multi:10},
+  cache:   {name:'Cache', cat:'cache', desc:'Giữ dữ liệu hay đọc trong RAM. Đọc trúng cache trả về ngay, trượt thì rơi xuống Database. Không nhận ghi.', tiers:[{k:'S',cap:3000,price:30,hit:.7},{k:'M',cap:6000,price:60,hit:.85},{k:'L',cap:12000,price:120,hit:.95}]},
+  queue:   {name:'Queue', cat:'async', desc:'Hứng lệnh ghi lúc cao điểm rồi nhả đều xuống Database theo tốc độ trung bình.', tiers:[{k:'Chuẩn',cap:6000,price:20}]},
+  db:      {name:'Database', cat:'data', desc:'Nơi duy nhất nhận ghi, cũng phục vụ đọc. Chỉ có 1 máy chính, muốn chia tải đọc thì thêm Read Replica.', tiers:[{k:'S',cap:400,price:50},{k:'M',cap:1000,price:120},{k:'L',cap:2500,price:300}]},
+  replica: {name:'Read Replica', cat:'data', desc:'Bản sao chỉ đọc của Database. Chia tải đọc, không nhận ghi.', tiers:[{k:'S',cap:400,price:40},{k:'M',cap:1000,price:100}], multi:6},
+  semcache:{name:'Semantic Cache', cat:'cache', desc:'Nhận ra câu hỏi na ná câu đã trả lời và dùng lại đáp án, khỏi gọi LLM.', tiers:[{k:'S',cap:3000,price:40,hit:.3},{k:'M',cap:5000,price:80,hit:.5},{k:'L',cap:8000,price:160,hit:.75}]},
+  llm:     {name:'LLM API', cat:'ai', desc:'Mô hình ngôn ngữ thuê ngoài. Có giới hạn tốc độ, tính tiền theo lượng gọi thực tế.', tiers:[{k:'Mini',cap:600,per:.3},{k:'Pro',cap:2500,per:.5}]},
+  vectordb:{name:'Vector DB', cat:'data', desc:'Tìm tài liệu liên quan cho mỗi câu hỏi AI (RAG) để LLM trả lời có nguồn, không bịa.', tiers:[{k:'S',cap:1000,price:60},{k:'M',cap:3000,price:150}]},
+};
+const ORDER = ['users','cdn','lb','app','cache','queue','semcache','vectordb','db','replica','llm'];
+const LOAD = {users:[],cdn:['s','r','w','a'],lb:['s','r','w','a'],app:['s','r','w','a'],cache:['r'],queue:['w'],semcache:['a'],vectordb:['a'],db:['r','w','wq'],replica:['r'],llm:['a']};
+const ALLOWED = {users:['cdn','lb','app'],cdn:['lb','app'],lb:['app'],app:['cache','queue','db','replica','semcache','llm','vectordb'],cache:['db','replica'],queue:['db'],semcache:['llm'],db:[],replica:[],llm:[],vectordb:[]};
+const LABEL = {s:'file tĩnh',r:'lệnh đọc',w:'lệnh ghi',wq:'lệnh ghi',a:'câu hỏi AI'};
+const fmt = x => Math.round(x).toLocaleString('vi-VN');
+const Z = () => ({s:0,r:0,w:0,wq:0,a:0});
+
+function nodeCost(n, st){
+  const t = TYPES[n.type]; if(!t.tiers) return 0;
+  const tier = t.tiers[n.tier];
+  if(tier.per) return st ? tier.per*Math.min(st.load, st.cap) : 0;
+  return tier.price*(n.count||1);
+}
+
+function simulate(level, design){
+  const nodes = design.nodes, edges = design.edges;
+  const byId = {}; nodes.forEach(n=>byId[n.id]=n);
+  const kids = {}, inb = {}, st = {}, flow = {};
+  nodes.forEach(n=>{kids[n.id]=[]; inb[n.id]=Z(); st[n.id]={load:0,cap:Infinity,ratio:1,over:false,nonLB:false,noLB:false,in:Z()};});
+  edges.forEach(e=>{ if(byId[e.from]&&byId[e.to]) kids[e.from].push(byId[e.to]); flow[e.id]={total:0}; });
+  const spike = level.spike||1, T = level.traffic;
+  const total = T.s+T.r+T.w+(T.a||0);
+  let done = 0, vdrop = 0;
+  const issues = [];
+  const edgeOf = (a,b)=>edges.find(e=>e.from===a&&e.to===b);
+  const weight = n => (n.type==='app'||n.type==='replica') ? (n.count||1) : 1;
+  const send = (from,to,c,x)=>{ inb[to.id][c]+=x; flow[edgeOf(from.id,to.id).id].total += c==='wq'? x*spike : x; if(from.type!=='lb') st[to.id].nonLB=true; };
+  const split = (from,list,c,x)=>{
+    if(x<=1e-9) return;
+    if(!list.length){ issues.push({id:from.id,kind:'route',text:`${TYPES[from.type].name} không có chỗ gửi ${LABEL[c]}: ${fmt(c==='wq'?x*spike:x)} request/giây bị rơi.`}); return; }
+    const ws = list.reduce((s,n)=>s+weight(n),0);
+    list.forEach(n=>send(from,n,c,x*weight(n)/ws));
+  };
+  const of = (id,...types)=>kids[id].filter(k=>types.includes(k.type));
+  const sorted = nodes.slice().sort((a,b)=>ORDER.indexOf(a.type)-ORDER.indexOf(b.type));
+  const users = nodes.find(n=>n.type==='users');
+  if(users) Object.assign(inb[users.id],{s:T.s,r:T.r,w:T.w,a:T.a||0});
+  let cost = 0;
+  for(const n of sorted){
+    const v = inb[n.id], s = st[n.id], t = TYPES[n.type];
+    s.in = {...v};
+    const tier = t.tiers ? t.tiers[n.tier] : null;
+    const load = LOAD[n.type].reduce((a,c)=>a+v[c],0);
+    let eff = n.count||1;
+    if(n.type==='app' && eff>1 && s.nonLB && load>0){ eff=1; s.noLB=true; }
+    s.load = load; s.cap = tier ? tier.cap*eff : Infinity;
+    s.ratio = load>s.cap ? s.cap/load : 1;
+    s.over = load > s.cap + 1e-6;
+    if(s.over){
+      const why = s.noLB ? ` Chạy ${n.count} máy nhưng không có Load Balancer phía trước, nên chỉ 1 máy nhận việc.` : '';
+      issues.push({id:n.id,kind:'over',text:`${t.name} quá tải: nhận ${fmt(load)} request/giây, chỉ chịu được ${fmt(s.cap)}.${why}`});
+    }
+    const sv = {...v}; LOAD[n.type].forEach(c=>sv[c]=v[c]*s.ratio);
+    cost += nodeCost(n, s);
+    const id = n.id;
+    switch(n.type){
+      case 'users': {
+        if(!kids[id].length && total>0){ issues.push({id,kind:'route',text:'Người dùng chưa được nối tới đâu cả: mọi request đều rơi.'}); break; }
+        const inner = of(id,'lb','app'), cdn = of(id,'cdn');
+        split(n, cdn.length?cdn:inner, 's', sv.s);
+        ['r','w','a'].forEach(c=>split(n, inner.length?inner:cdn, c, sv[c]));
+        break; }
+      case 'cdn': done += sv.s; ['r','w','a'].forEach(c=>split(n, of(id,'lb','app'), c, sv[c])); break;
+      case 'lb': ['s','r','w','a'].forEach(c=>split(n, of(id,'app'), c, sv[c])); break;
+      case 'app': {
+        done += sv.s;
+        const cache = of(id,'cache'), q = of(id,'queue'), sem = of(id,'semcache');
+        split(n, cache.length?cache:of(id,'db','replica'), 'r', sv.r);
+        split(n, q.length?q:of(id,'db'), 'w', sv.w);
+        split(n, sem.length?sem:of(id,'llm'), 'a', sv.a);
+        const vdb = of(id,'vectordb');
+        if(sv.a>0) vdb.forEach(k=>send(n,k,'a',sv.a/vdb.length));
+        break; }
+      case 'cache': done += sv.r*tier.hit; split(n, of(id,'db','replica'), 'r', sv.r*(1-tier.hit)); break;
+      case 'queue': split(n, of(id,'db'), 'wq', sv.w/spike); break;
+      case 'semcache': done += sv.a*tier.hit; split(n, of(id,'llm'), 'a', sv.a*(1-tier.hit)); break;
+      case 'vectordb': vdrop += v.a*(1-s.ratio); break;
+      case 'db': done += sv.r + sv.w + sv.wq*spike; break;
+      case 'replica': done += sv.r; break;
+      case 'llm': done += sv.a; break;
+    }
+  }
+  done = Math.max(0, done - vdrop);
+  const success = total ? done/total : 1;
+  // extra goal checks
+  const apps = nodes.filter(n=>n.type==='app' && st[n.id].load>0);
+  const appInstances = apps.reduce((a,n)=>a+(st[n.id].noLB?1:(n.count||1)),0);
+  const grounded = apps.filter(n=>st[n.id].in.a>0).every(n=>of(n.id,'vectordb').some(k=>!st[k.id].over)) && apps.some(n=>st[n.id].in.a>0);
+  cost = Math.round(cost*100)/100;
+  return {st, flow, issues, success, cost, total, done, appInstances, grounded};
+}
+
+function evaluate(level, r){
+  const goals = [];
+  goals.push({k:'success', label:'Không request nào bị rơi, không node nào quá tải', ok: r.issues.length===0 && r.success>0.9999});
+  goals.push({k:'budget', label:`Chi phí không vượt $${fmt(level.budget)} / tháng`, ok: r.cost <= level.budget+1e-6});
+  if(level.goals?.includes('redundant')) goals.push({k:'redundant', label:'Không có điểm chết đơn lẻ: ít nhất 2 máy App sau Load Balancer', ok: r.appInstances>=2});
+  if(level.goals?.includes('grounded')) goals.push({k:'grounded', label:'Mọi câu trả lời AI đều có nguồn (App nối Vector DB)', ok: r.grounded});
+  const pass = goals.every(g=>g.ok);
+  const stars = !pass ? 0 : r.cost<=level.stars[0]+1e-6 ? 3 : r.cost<=level.stars[1]+1e-6 ? 2 : 1;
+  return {goals, pass, stars};
+}
+
+const WORLDS = [
+  {name:'Nền tảng', desc:'Từ vài trăm người dùng đến khi bỗng dưng nổi tiếng.'},
+  {name:'Hệ thống tải cao', desc:'Database ngộp thở và traffic dồn dập theo đợt.'},
+  {name:'Ứng dụng AI', desc:'Chi phí token, rate limit và RAG để chatbot khỏi bịa.'},
+];
+const P = (id,type,tier,count,u,v,locked)=>({id,type,tier:tier||0,count:count||1,u,v,locked:!!locked});
+const LEVELS = [
+  {id:'1-1', world:0, name:'Hello, production',
+   story:'Bạn vừa viết xong app đặt bàn cho quán cà phê. 250 người dùng mỗi giây đang chờ. Dựng một App Server và một Database rồi nối chúng lại.',
+   traffic:{s:50,r:150,w:50}, budget:120, stars:[90,105], palette:['app','db'],
+   pre:[P('u','users',0,1,.08,.5,true)], edges:[],
+   hints:['Request đi theo dây: Người dùng → App Server → Database.','App Server xử lý mọi request. Lệnh đọc và ghi phải đi tiếp tới Database, không thì bị rơi.','Kéo App Server và Database lên board. Kéo từ chấm tròn bên phải node này sang node kia để nối dây.','Người dùng → App Server (S, 1 máy) → Database (S). Tổng $90.']},
+  {id:'1-2', world:0, name:'Lên báo',
+   story:'Một tờ báo công nghệ vừa đăng bài về app của bạn. Traffic tăng gần gấp ba. Hệ thống cũ sẽ gục ở đâu?',
+   traffic:{s:200,r:400,w:100}, budget:250, stars:[185,215], palette:['lb','app','cache','db'],
+   pre:[P('u','users',0,1,.08,.5,true),P('a1','app',0,1,.42,.5),P('d1','db',0,1,.82,.5)], edges:[['u','a1'],['a1','d1']],
+   hints:['Bấm Chạy trước, xem node nào bị đóng dấu CRASHED.','Một máy App S chịu 500 req/s. Nhiều máy thì cần Load Balancer đứng trước để chia việc. Database S chịu 400 req/s, tính cả đọc lẫn ghi.','Thêm Load Balancer và tăng App lên 2 máy. Đặt Cache giữa App và Database để phần lớn lệnh đọc không chạm tới DB. App vẫn phải nối thẳng Database cho lệnh ghi.','Người dùng → LB → App S×2. App → Cache S → Database S, và App → Database. Tổng $185.']},
+  {id:'1-3', world:0, boss:true, name:'Đêm Hacker News', goals:['redundant'],
+   story:'Bài của bạn lên top Hacker News lúc nửa đêm. 3.000 request mỗi giây, hơn một phần ba là ảnh và file JS. Giữ nó sống tới sáng.',
+   traffic:{s:1200,r:1500,w:300}, budget:450, stars:[390,420], palette:['cdn','lb','app','cache','db'],
+   pre:[P('u','users',0,1,.07,.5,true)], edges:[],
+   hints:['Hơn một phần ba traffic là file tĩnh. Ai nên phục vụ chúng?','CDN trả file tĩnh ngay ở biên, App khỏi phải gánh. Cache càng lớn thì tỉ lệ trúng càng cao, càng ít lệnh đọc rơi xuống Database.','Người dùng → CDN → LB → nhiều máy App S. Một Cache L giữ cho Database S đủ sức.','Người dùng → CDN → LB → App S×4. App → Cache L → Database S, và App → Database. Tổng $390.']},
+  {id:'2-1', world:1, name:'Giải cứu database',
+   story:'Trang chủ mới hiển thị bảng xếp hạng, mỗi lượt xem là 5 câu truy vấn. Lệnh đọc tăng vọt, Database thì vẫn là con S cũ.',
+   traffic:{s:0,r:2000,w:200}, budget:450, stars:[375,400], palette:['lb','app','cache','db','replica'],
+   pre:[P('u','users',0,1,.07,.5,true),P('l1','lb',0,1,.27,.5),P('a1','app',0,5,.5,.5),P('d1','db',0,1,.85,.5)], edges:[['u','l1'],['l1','a1'],['a1','d1']],
+   hints:['Cả 2.000 lệnh đọc đang dồn vào một Database S.','Cache chặn phần lớn lệnh đọc. Phần trượt có thể chia cho Read Replica, vì đọc thì không cần đúng máy chính.','Thử Cache M, rồi cho phần trượt chia giữa Database và một Read Replica S.','App → Cache M → Database S và Read Replica S. App → Database cho lệnh ghi. Tổng $375.']},
+  {id:'2-2', world:1, name:'Flash sale 0 giờ',
+   story:'Đúng 0 giờ, mọi người cùng bấm "Mua". Lệnh ghi và đọc tăng gấp ba so với trung bình, chỉ trong vài phút.',
+   traffic:{s:0,r:1200,w:1200}, spike:3, budget:450, stars:[365,395], palette:['lb','app','cache','queue','db','replica'],
+   pre:[P('u','users',0,1,.07,.5,true),P('l1','lb',0,1,.25,.5),P('a1','app',0,5,.45,.5),P('d1','db',1,1,.85,.5)], edges:[['u','l1'],['l1','a1'],['a1','d1']],
+   hints:['Lệnh ghi cao gấp ba lúc cao điểm, nhưng đơn hàng đâu cần ghi xong ngay trong mili giây.','Queue hứng lệnh ghi lúc cao điểm và nhả xuống Database theo tốc độ trung bình (1/3). Cache lo phần đọc.','Đặt Queue giữa App và Database cho lệnh ghi, Cache cho lệnh đọc. Có cách để Database chỉ phải lo ghi.','App → Queue → Database S. App → Cache S → Read Replica S (cache không nối Database). Tổng $365.']},
+  {id:'2-3', world:1, boss:true, name:'Sống sót qua Black Friday', goals:['redundant'], spike:2,
+   story:'Black Friday. Mọi thứ cùng tăng gấp đôi: ảnh sản phẩm, lượt xem, đơn hàng. Bạn có $700 cho cả tháng.',
+   traffic:{s:2000,r:3000,w:800}, budget:700, stars:[580,640], palette:['cdn','lb','app','cache','queue','db','replica'],
+   pre:[P('u','users',0,1,.06,.5,true)], edges:[],
+   hints:['Có ba loại traffic, mỗi loại cần một cách xử lý riêng.','Static → CDN. Đọc → Cache, phần trượt chia cho Replica. Ghi → Queue nhả đều xuống Database theo trung bình (1/2).','CDN → LB → nhiều App S. App → Queue → Database. App → Cache → Replica.','Người dùng → CDN → LB → App S×8. App → Queue → Database S. App → Cache S → Read Replica M. Tổng $580.']},
+  {id:'3-1', world:2, name:'Chatbot lên sóng',
+   story:'Sếp muốn có trợ lý AI trả lời khách. 700 câu hỏi mỗi giây đổ vào, gói LLM Mini chỉ cho 600.',
+   traffic:{s:100,r:200,w:50,a:700}, budget:440, stars:[375,410], palette:['cdn','lb','app','db','semcache','llm'],
+   pre:[P('u','users',0,1,.07,.5,true),P('l1','lb',0,1,.25,.5),P('a1','app',0,2,.45,.5),P('d1','db',0,1,.82,.3)], edges:[['u','l1'],['l1','a1'],['a1','d1']],
+   hints:['Câu hỏi AI cần một LLM để trả lời. LLM tính tiền theo lượng gọi.','Rất nhiều khách hỏi cùng một câu. Semantic Cache trả lại đáp án cũ, giảm số lần gọi LLM và tiền token.','App → Semantic Cache → LLM Mini. Đẩy file tĩnh sang CDN để 2 máy App đủ sức.','Người dùng → CDN → LB → App S×2. App → Semantic Cache M → LLM Mini. App → Database S. Tổng $375.']},
+  {id:'3-2', world:2, name:'Đừng bịa nữa', goals:['grounded'],
+   story:'Chatbot vừa hứa hoàn tiền gấp đôi cho khách vì tự bịa chính sách. Từ giờ mọi câu trả lời phải dựa trên tài liệu thật.',
+   traffic:{s:0,r:300,w:50,a:500}, budget:400, stars:[360,380], palette:['lb','app','db','semcache','llm','vectordb'],
+   pre:[P('u','users',0,1,.07,.5,true),P('l1','lb',0,1,.25,.5),P('a1','app',0,2,.45,.5),P('d1','db',0,1,.82,.25),P('m1','llm',0,1,.82,.72)], edges:[['u','l1'],['l1','a1'],['a1','d1'],['a1','m1']],
+   hints:['LLM không biết chính sách công ty bạn. Nó cần được đưa tài liệu.','Vector DB tìm đoạn tài liệu liên quan cho từng câu hỏi (RAG). Mỗi câu hỏi AI là một lượt tìm.','Nối App → Vector DB S. Ngân sách còn chật, thử thêm một Semantic Cache nhỏ.','App → Vector DB S. App → Semantic Cache S → LLM Mini. Tổng $360.']},
+  {id:'3-3', world:2, boss:true, name:'Chatbot đốt ngân sách', goals:['redundant','grounded'],
+   story:'Ra mắt công khai. 2.000 câu hỏi AI mỗi giây và hoá đơn token đang phình ra. Giữ chatbot sống, có nguồn, dưới $950.',
+   traffic:{s:400,r:500,w:100,a:2000}, budget:950, stars:[805,880], palette:['cdn','lb','app','cache','db','replica','semcache','llm','vectordb'],
+   pre:[P('u','users',0,1,.06,.5,true)], edges:[],
+   hints:['2.000 câu hỏi mỗi giây gọi thẳng LLM thì Mini không chịu nổi, còn Pro thì rất đắt.','Semantic Cache L trúng 75%, đủ để LLM Mini gánh phần còn lại. Mỗi câu hỏi vẫn cần một lượt tìm Vector DB.','Tính kỹ tải App: tổng mọi loại request. Đôi khi CDN không đáng tiền.','Người dùng → LB → App S×6. App → Vector DB M. App → Semantic Cache L → LLM Mini. App → Cache S → Database S, và App → Database. Tổng $805.']},
+];
+// SIM-END
+
+const TITLES = [[0,'Intern'],[3,'Junior Engineer'],[7,'Mid-level Engineer'],[11,'Senior Engineer'],[16,'Staff Engineer'],[21,'Principal Engineer'],[27,'Distinguished Architect']];
+const ICONS = {
+  users:'<circle cx="9" cy="8" r="3"/><path d="M3 19c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><circle cx="17" cy="9" r="2.4"/><path d="M16 13.6c2.8 0 5 1.8 5 4.6"/>',
+  cdn:'<circle cx="12" cy="12" r="8.5"/><ellipse cx="12" cy="12" rx="3.6" ry="8.5"/><path d="M3.5 12h17"/>',
+  lb:'<circle cx="12" cy="5" r="2"/><path d="M12 7v4M12 11l-6 5M12 11l6 5M12 11v5"/><circle cx="6" cy="18" r="1.6"/><circle cx="12" cy="18" r="1.6"/><circle cx="18" cy="18" r="1.6"/>',
+  app:'<rect x="4" y="4" width="16" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="16" height="6.5" rx="1.5"/><path d="M7.5 7.2h.01M7.5 16.7h.01M11 7.2h5M11 16.7h5"/>',
+  cache:'<path d="M13.5 3 6 13.2h5.2L10.4 21 18 10.6h-5.3z"/>',
+  queue:'<rect x="3" y="7" width="4.2" height="10" rx="1"/><rect x="9.9" y="7" width="4.2" height="10" rx="1"/><rect x="16.8" y="7" width="4.2" height="10" rx="1"/>',
+  db:'<ellipse cx="12" cy="5.5" rx="7" ry="2.5"/><path d="M5 5.5v13c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5v-13"/><path d="M5 12c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5"/>',
+  replica:'<ellipse cx="10" cy="6" rx="5.5" ry="2"/><path d="M4.5 6v10c0 1.1 2.5 2 5.5 2s5.5-.9 5.5-2V6"/><path d="M18.5 8.5v9.5c0 1.1-2.5 2-5.5 2"/>',
+  semcache:'<path d="M11.5 4 5.5 12.2h4.2L9 19l6-8.4h-4.3z"/><path d="M18 3.5v4M16 5.5h4M18.5 15v3M17 16.5h3"/>',
+  llm:'<rect x="6.5" y="6.5" width="11" height="11" rx="2"/><path d="M9.5 3.5v3M14.5 3.5v3M9.5 17.5v3M14.5 17.5v3M3.5 9.5h3M3.5 14.5h3M17.5 9.5h3M17.5 14.5h3"/><path d="M10 12h4"/>',
+  vectordb:'<ellipse cx="12" cy="5.5" rx="7" ry="2.5"/><path d="M5 5.5v13c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5v-13"/><circle cx="9.5" cy="12" r=".8"/><circle cx="14.5" cy="11" r=".8"/><circle cx="12" cy="15.5" r=".8"/>',
+};
+const icon = t => `<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${ICONS[t]}</svg>`;
+const LAYER_U = {users:.07,cdn:.2,lb:.3,app:.45,cache:.65,queue:.65,semcache:.65,vectordb:.65,db:.87,replica:.87,llm:.87};
+const NW = 156, NH = 60;
+
+/* ---------- storage ---------- */
+const KEY = 'sapsap.v1';
+let save = {stars:{}, seen:{}, fails:{}, used:{}, designs:{}, skin:'soft', mode:'auto'};
+try{ const raw = localStorage.getItem(KEY); if(raw) save = Object.assign(save, JSON.parse(raw)); }catch(e){}
+function persist(){ try{ localStorage.setItem(KEY, JSON.stringify(save)); }catch(e){} }
+
+/* ---------- state ---------- */
+const S = {screen:'home', level:null, design:null, sel:null, selEdge:null, run:null, anim:null, hintOpen:{}, confirmSol:false, confirmReset:false, modal:null, orient:'land'};
+const app = document.getElementById('app');
+const $ = (sel,root=document)=>root.querySelector(sel);
+let toastT;
+function toast(msg){ const t=$('#toast'); t.textContent=msg; t.hidden=false; clearTimeout(toastT); toastT=setTimeout(()=>t.hidden=true,2600); }
+
+function totalStars(){ return LEVELS.reduce((a,l)=>a+Math.min(save.stars[l.id]||0, save.seen[l.id]?1:3),0); }
+function rawStars(ids){ return ids.reduce((a,id)=>a+(save.stars[id]||0),0); }
+function worldUnlocked(w){
+  if(w===0) return true;
+  const prev = LEVELS.filter(l=>l.world<w);
+  return rawStars(prev.map(l=>l.id)) >= Math.ceil(prev.length*3*0.7);
+}
+function levelUnlocked(l){
+  if(!worldUnlocked(l.world)) return false;
+  const inW = LEVELS.filter(x=>x.world===l.world); const i = inW.indexOf(l);
+  return i===0 || (save.stars[inW[i-1].id]||0)>0;
+}
+function rankOf(n){ let r=TITLES[0], next=null; TITLES.forEach((t,i)=>{ if(n>=t[0]){ r=t; next=TITLES[i+1]||null; } }); return {title:r[1], at:r[0], next}; }
+const starStr = n => `<span>${'★'.repeat(n)}</span><span class="off">${'★'.repeat(3-n)}</span>`;
+
+function applySettings(){
+  document.body.classList.toggle('sketch', save.skin==='sketch');
+  if(save.mode==='auto') document.body.removeAttribute('data-mode'); else document.body.setAttribute('data-mode', save.mode);
+}
+
+/* ---------- HOME ---------- */
+function badgeList(){
+  const out = [];
+  WORLDS.forEach((w,i)=>{
+    const ls = LEVELS.filter(l=>l.world===i), got = rawStars(ls.map(l=>l.id)), max = ls.length*3;
+    const all = ls.every(l=>save.stars[l.id]);
+    const tier = got===max ? ['Vàng','#c99400'] : got>=Math.ceil(max*.7) ? ['Bạc','#8b97a6'] : all ? ['Đồng','#b0703a'] : null;
+    out.push({name:`${w.name}${tier?' · '+tier[0]:''}`, sub: tier? `${got}/${max} sao` : 'Qua hết các màn của thế giới', on:!!tier, color: tier?tier[1]:'#8b97a6', mark:i+1});
+  });
+  LEVELS.filter(l=>l.boss).forEach(l=>out.push({name:`Boss: ${l.name}`, sub: save.stars[l.id]? 'Đã hạ' : 'Chưa hạ', on:!!save.stars[l.id], color:'#d93a27', mark:'B'}));
+  const expert = (type,label)=>{ const n = Object.values(save.used).filter(u=>u.includes(type)).length; out.push({name:`Chuyên gia ${label}`, sub:`Qua 3 màn có dùng ${label} (${Math.min(n,3)}/3)`, on:n>=3, color:'#2f56e0', mark:label[0]}); };
+  expert('cache','Cache'); expert('queue','Queue'); expert('replica','Replica'); expert('semcache','Semantic Cache');
+  return out;
+}
+function renderHome(){
+  const ts = totalStars(), rk = rankOf(ts);
+  const pct = rk.next ? Math.round((ts-rk.at)/(rk.next[0]-rk.at)*100) : 100;
+  let h = `<div id="home" class="wrap">
+    <div class="hero">
+      <div>
+        <span class="eyebrow">Game thiết kế hệ thống</span>
+        <div class="brand">Sắp <span class="crack">Sập</span></div>
+        <p class="tag">Dựng server, cache, queue, database. Bấm Chạy, rồi xem nó có trụ nổi không.</p>
+      </div>
+      <div class="rank" aria-label="Danh hiệu">
+        <span class="eyebrow">Danh hiệu</span>
+        <h3>${rk.title}</h3>
+        <div class="bar"><i style="width:${pct}%"></i></div>
+        <div class="rank-row"><span class="mono">★ ${ts} / ${LEVELS.length*3}</span><span>${rk.next?`Còn ${rk.next[0]-ts} sao để lên ${rk.next[1]}`:'Bậc cao nhất'}</span></div>
+      </div>
+    </div>
+    <div class="how">
+      <div><b>Dựng</b><p>Kéo thành phần lên board, nối dây, chọn tier và số máy.</p></div>
+      <div><b>Chạy</b><p>Traffic đổ vào thành từng chấm. Node quá tải viền đỏ, request rơi thành chấm đỏ.</p></div>
+      <div><b>Cứu</b><p>Node gục đầu tiên bị đóng dấu CRASHED kèm số liệu. Sửa rồi chạy lại. Càng rẻ càng nhiều sao.</p></div>
+    </div>`;
+  WORLDS.forEach((w,i)=>{
+    const ls = LEVELS.filter(l=>l.world===i), open = worldUnlocked(i);
+    h += `<section class="world"><div class="world-head"><h2>${i+1}. ${w.name}</h2><p>${w.desc}</p></div>`;
+    if(!open){
+      const prev = LEVELS.filter(l=>l.world<i), need = Math.ceil(prev.length*3*.7), have = rawStars(prev.map(l=>l.id));
+      h += `<div class="locked-world">Khoá. Gom đủ ${need} sao ở các thế giới trước để mở (đang có ${have}).</div>`;
+    } else {
+      h += `<div class="levels">` + ls.map(l=>{
+        const ok = levelUnlocked(l), s = save.stars[l.id]||0;
+        return `<button class="lv${l.boss?' boss':''}" data-level="${l.id}" ${ok?'':'disabled'}>
+          <span class="n">${l.id}${l.boss?' <span class="pill">Boss</span>':''}${save.seen[l.id]?' <span>· đã xem lời giải</span>':''}</span>
+          <span class="t">${l.name}</span>
+          <span class="st" aria-label="${s} sao">${ok?starStr(s):'<span class="lockmsg">Qua màn trước để mở</span>'}</span></button>`;
+      }).join('') + `</div>`;
+    }
+    h += `</section>`;
+  });
+  h += `<section class="world"><div class="world-head"><h2>4. Agent Harness</h2><p>Agent chạy lâu, gọi tool thật.</p></div><div class="locked-world">Đang xây. Thế giới này chưa có màn chơi.</div></section>`;
+  h += `<section class="world"><div class="world-head"><h2>Huy hiệu</h2><p>Thế giới, Boss và chuyên gia theo chủ đề.</p></div><div class="badges">` +
+    badgeList().map(b=>`<div class="badge${b.on?'':' off'}"><span class="medal" style="background:${b.color}">${b.mark}</span><b>${b.name}</b><span>${b.sub}</span></div>`).join('') + `</div></section>`;
+  h += `<div class="settings">
+    <label>Skin <span class="seg" role="group"><button data-skin="soft" aria-pressed="${save.skin==='soft'}">Soft</button><button data-skin="sketch" aria-pressed="${save.skin==='sketch'}">Sketch</button></span></label>
+    <label>Giao diện <span class="seg" role="group"><button data-mode="auto" aria-pressed="${save.mode==='auto'}">Tự động</button><button data-mode="light" aria-pressed="${save.mode==='light'}">Sáng</button><button data-mode="dark" aria-pressed="${save.mode==='dark'}">Tối</button></span></label>
+    ${S.confirmReset ? `<span class="confirm">Xoá hết sao và thiết kế đã lưu? <button class="btn danger" data-reset="yes">Xoá</button><button class="btn" data-reset="no">Thôi</button></span>` : `<button class="btn" data-reset="ask">Chơi lại từ đầu</button>`}
+  </div>
+  <p class="eyebrow" style="margin-top:18px">Giá và sức tải là số của game, không phải bảng giá hay benchmark thật. Cùng một thiết kế luôn cho cùng kết quả.</p>
+  </div>`;
+  app.innerHTML = h;
+}
+
+/* ---------- GAME ---------- */
+function freshDesign(l){
+  return {nodes:l.pre.map(n=>({...n})), edges:l.edges.map(([a,b])=>({id:a+'>'+b,from:a,to:b}))};
+}
+function openLevel(id){
+  const l = LEVELS.find(x=>x.id===id);
+  S.level = l; S.sel=null; S.selEdge=null; S.run=null; S.modal=null; S.hintOpen={}; S.confirmSol=false;
+  const saved = save.designs[id];
+  S.design = saved ? JSON.parse(JSON.stringify(saved)) : freshDesign(l);
+  S.screen='game'; render();
+}
+function storeDesign(){ save.designs[S.level.id] = S.design; persist(); }
+function changed(){ S.run=null; stopAnim(); storeDesign(); }
+
+function dims(){ return S.orient==='land' ? {W:1000,H:600} : {W:560,H:880}; }
+function pos(n){ const {W,H}=dims(); return S.orient==='land' ? {x:n.u*W,y:n.v*H} : {x:n.v*W,y:n.u*H}; }
+function setPos(n,x,y){
+  const {W,H}=dims();
+  x = Math.max(NW/2+8, Math.min(W-NW/2-8, x)); y = Math.max(NH/2+22, Math.min(H-NH/2-26, y));
+  if(S.orient==='land'){ n.u=x/W; n.v=y/H; } else { n.v=x/W; n.u=y/H; }
+}
+function outPort(n){ const p=pos(n); return S.orient==='land'?{x:p.x+NW/2,y:p.y}:{x:p.x,y:p.y+NH/2}; }
+function inPort(n){ const p=pos(n); return S.orient==='land'?{x:p.x-NW/2,y:p.y}:{x:p.x,y:p.y-NH/2}; }
+function curve(a,b){
+  if(S.orient==='land'){ const d=Math.max(40,Math.abs(b.x-a.x)/2); return [a,{x:a.x+d,y:a.y},{x:b.x-d,y:b.y},b]; }
+  const d=Math.max(40,Math.abs(b.y-a.y)/2); return [a,{x:a.x,y:a.y+d},{x:b.x,y:b.y-d},b];
+}
+const pathD = c => `M${c[0].x},${c[0].y} C${c[1].x},${c[1].y} ${c[2].x},${c[2].y} ${c[3].x},${c[3].y}`;
+function bez(c,t){ const m=1-t; return {x:m*m*m*c[0].x+3*m*m*t*c[1].x+3*m*t*t*c[2].x+t*t*t*c[3].x, y:m*m*m*c[0].y+3*m*m*t*c[1].y+3*m*t*t*c[2].y+t*t*t*c[3].y}; }
+function edgeCurve(e){ const a=S.design.nodes.find(n=>n.id===e.from), b=S.design.nodes.find(n=>n.id===e.to); return curve(outPort(a),inPort(b)); }
+
+function nodeSub(n){
+  const t=TYPES[n.type];
+  if(n.type==='users'){ const T=S.level.traffic; return `${fmt(T.s+T.r+T.w+(T.a||0))} req/s`; }
+  const tier=t.tiers[n.tier];
+  if(tier.per) return `${tier.k} · $${String(tier.per).replace('.',',')}/req`;
+  return `${tier.k}${t.multi?` × ${n.count}`:''} · $${fmt(tier.price*n.count)}`;
+}
+
+function liveCost(){ return simulate(S.level, S.design).cost; }
+
+function renderGame(){
+  const l = S.level;
+  const T = l.traffic;
+  const goalsHTML = goalsBlock();
+  const pal = l.palette.map(t=>{ const d=TYPES[t], tier=d.tiers[0]; return `<button class="pal" data-pal="${t}" aria-label="Thêm ${d.name}">
+      <span class="chip cat-${d.cat}">${icon(t)}</span><b>${d.name}</b><small>${tier.per?`từ $${String(tier.per).replace('.',',')}/req`:`từ $${tier.price}`}</small></button>`; }).join('');
+  app.innerHTML = `<div id="game">
+    <div class="top wrap">
+      <button class="btn" data-act="home" aria-label="Về bản đồ">←</button>
+      <div class="title"><span class="eyebrow">${l.id} · ${WORLDS[l.world].name}${l.boss?' · Boss':''}</span><h1>${l.name}</h1></div>
+      <div class="meter" id="meterTop"></div>
+      <button class="btn primary run run-top" data-act="run">▶ Chạy</button>
+    </div>
+    <details class="mobile-goals wrap"><summary>Đề bài và mục tiêu</summary><div class="inner">${goalsHTML}${hintsBlock()}</div></details>
+    <div class="main">
+      <div class="rail" aria-label="Thành phần">${pal}</div>
+      <div class="stage" id="stage">
+        <div class="board-wrap" id="bw">
+          <svg id="board" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="dots" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="1.5" cy="1.5" r="1.3" class="dotgrid"/></pattern>
+              <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="arrow"/></marker>
+            </defs>
+            <rect id="bgrect" x="0" y="0" fill="url(#dots)"/>
+            <g id="layer"></g><g id="fx"></g>
+          </svg>
+          <div class="empty-hint" id="emptyHint" hidden></div>
+        </div>
+      </div>
+      <div class="side">
+        ${goalsHTML}
+        <div id="inspSide"></div>
+        ${hintsBlock()}
+      </div>
+    </div>
+    <div class="bottom"><div class="meter" id="meterBottom"></div><button class="btn primary run" data-act="run">▶ Chạy</button></div>
+    <div id="sheet"></div>
+  </div>`;
+  fitBoard(); renderBoard(); renderMeter(); renderInspector();
+  ro.disconnect(); ro.observe($('#stage'));
+}
+function goalsBlock(){
+  const l=S.level, T=l.traffic;
+  const ev = S.run ? S.run.ev : null;
+  const goals = ev ? ev.goals : evaluate(l, {issues:[1],success:0,cost:Infinity,appInstances:0,grounded:false}).goals;
+  return `<div class="panel"><h3>Đề bài</h3><p class="story">${l.story}</p>
+    <div class="traffic">
+      <div>File tĩnh<b>${fmt(T.s)}</b></div><div>Đọc<b>${fmt(T.r)}</b></div><div>Ghi<b>${fmt(T.w)}</b></div><div>Câu hỏi AI<b>${fmt(T.a||0)}</b></div>
+    </div>
+    ${l.spike?`<div class="spike">Số trên là lúc cao điểm, gấp ${l.spike} lần trung bình.</div>`:''}
+  </div>
+  <div class="panel"><h3>Mục tiêu</h3><ul class="goals">${goals.map(g=>`<li class="${ev?(g.ok?'ok':'no'):''}"><span class="dot">${ev?(g.ok?'✓':'×'):''}</span><span>${g.label}</span></li>`).join('')}</ul>
+    <div class="starline mono">★★★ ≤ $${fmt(l.stars[0])} · ★★ ≤ $${fmt(l.stars[1])} · ★ ≤ $${fmt(l.budget)}</div></div>`;
+}
+const HINT_NAMES = ['Gợi ý nhẹ','Cơ chế','Cách sửa','Lời giải'];
+function hintsBlock(){
+  const l=S.level, fails=save.fails[l.id]||0;
+  const avail = Math.min(4, fails);
+  return `<div class="panel"><h3>Gợi ý</h3><div class="hints">${HINT_NAMES.map((name,i)=>{
+    if(i>=avail) return `<div class="hint locked"><b>${name}</b><span>Mở sau ${i+1} lượt chạy chưa qua.</span></div>`;
+    const open = S.hintOpen[i] || (i===3 && save.seen[l.id]);
+    if(open) return `<div class="hint open"><b>${name}</b><span>${l.hints[i]}</span></div>`;
+    if(i===3 && S.confirmSol) return `<div class="hint"><b>${name}</b><span class="inline-confirm">Xem lời giải thì màn này chỉ tính 1 sao cho danh hiệu và huy hiệu. <button class="btn danger" data-sol="yes">Xem</button><button class="btn" data-sol="no">Thôi</button></span></div>`;
+    return `<button class="hint" data-hint="${i}"><b>${name}</b><span>Bấm để xem</span></button>`;
+  }).join('')}</div></div>`;
+}
+function renderMeter(){
+  const l=S.level, c=liveCost(), over=c>l.budget+1e-6, pct=Math.min(100,c/l.budget*100);
+  const h = `<div class="row"><span>Chi phí / tháng</span><b class="mono">$${fmt(c)}</b></div><div class="bar"><i style="width:${pct}%"></i></div><div class="row"><span class="mono" style="color:var(--ink-2)">ngân sách $${fmt(l.budget)}</span>${over?'<span style="color:var(--bad);font-weight:600">Vượt ngân sách</span>':''}</div>`;
+  ['#meterTop','#meterBottom'].forEach(s=>{ const m=$(s); if(m){ m.innerHTML=h; m.classList.toggle('over',over); }});
+}
+function refreshSide(){
+  const side=$('.side'); if(side){ side.innerHTML = goalsBlock()+'<div id="inspSide"></div>'+hintsBlock(); }
+  const mg=$('.mobile-goals .inner'); if(mg) mg.innerHTML = goalsBlock()+hintsBlock();
+  renderInspector();
+}
+function fitBoard(){
+  const stage=$('#stage'); if(!stage) return;
+  const w = stage.clientWidth;
+  const o = w < 620 ? 'port' : 'land';
+  S.orient = o;
+  const {W,H}=dims();
+  const svg=$('#board'); svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  const bg=$('#bgrect'); bg.setAttribute('width',W); bg.setAttribute('height',H);
+  const bw=$('#bw'); bw.style.aspectRatio = `${W} / ${H}`;
+  if(o==='land'){ const avail = stage.clientHeight-28; bw.style.width = avail>0 ? `min(100%, ${avail*W/H}px)` : '100%'; }
+  else bw.style.width='100%';
+}
+const ro = new ResizeObserver(()=>{ const prev=S.orient; fitBoard(); if(prev!==S.orient) renderBoard(); });
+
+function renderBoard(){
+  const layer=$('#layer'); if(!layer) return;
+  const d=S.design, run=S.run, revealed = run && (!S.anim || S.anim.revealed);
+  let h='';
+  d.edges.forEach(e=>{
+    const c=edgeCurve(e), live = revealed && run.sim.flow[e.id]?.total>0;
+    h+=`<path class="edge${live?' live':''}${S.selEdge===e.id?' sel':''}" d="${pathD(c)}" marker-end="url(#arr)"/>`;
+    h+=`<path class="edge-hit" data-edge="${e.id}" d="${pathD(c)}"><title>Bấm để chọn dây</title></path>`;
+  });
+  const crashId = revealed && run.sim.issues.length && (!S.anim || S.anim.stamped) ? run.sim.issues[0].id : null;
+  d.nodes.forEach(n=>{
+    const p=pos(n), t=TYPES[n.type], st = revealed ? run.sim.st[n.id] : null;
+    const cls = ['nd'];
+    if(S.sel===n.id) cls.push('sel');
+    if(st && (st.over || run.sim.issues.some(i=>i.id===n.id))) cls.push('over'); else if(st && st.load>0) cls.push('okrun');
+    h+=`<g class="${cls.join(' ')}" data-node="${n.id}" transform="translate(${p.x} ${p.y})" tabindex="0" role="button" aria-label="${t.name}">`;
+    const stacks = Math.min((n.count||1)-1, 3);
+    for(let i=stacks;i>=1;i--) h+=`<rect class="nd-stack" x="${-NW/2+i*4}" y="${-NH/2-i*4}" width="${NW}" height="${NH}" rx="12"/>`;
+    h+=`<rect class="nd-box" x="${-NW/2}" y="${-NH/2}" width="${NW}" height="${NH}" rx="12"/>`;
+    h+=`<rect class="nd-chip cat-${t.cat}" x="${-NW/2+10}" y="-17" width="34" height="34" rx="10"/>`;
+    h+=`<g class="nd-ic" transform="translate(${-NW/2+15} -12) scale(1)">${ICONS[n.type]}</g>`;
+    h+=`<text class="nd-name" x="${-NW/2+54}" y="-3">${t.name}</text>`;
+    h+=`<text class="nd-sub" x="${-NW/2+54}" y="14">${nodeSub(n)}${n.locked?' · cố định':''}</text>`;
+    if(st && st.load>0 && n.type!=='users') h+=`<text class="nd-load" x="0" y="${NH/2+16}" text-anchor="middle">${fmt(st.load)} / ${fmt(st.cap)} req/s</text>`;
+    if(ALLOWED[n.type].length){ const o = S.orient==='land'?{x:NW/2,y:0}:{x:0,y:NH/2}; h+=`<circle class="port-hit" data-port="${n.id}" cx="${o.x}" cy="${o.y}" r="16"/><circle class="port" data-port="${n.id}" cx="${o.x}" cy="${o.y}" r="7"/>`; }
+    if(crashId===n.id) h+=`<g class="stamp" transform="translate(0 ${-NH/2-4}) rotate(-6)"><rect x="-52" y="-14" width="104" height="24" rx="4"/><text x="0" y="3" text-anchor="middle">CRASHED</text></g>`;
+    h+=`</g>`;
+  });
+  if(S.selEdge){ const e=d.edges.find(x=>x.id===S.selEdge); if(e){ const m=bez(edgeCurve(e),.5); h+=`<g class="edge-x" data-del-edge="${e.id}" transform="translate(${m.x} ${m.y})" style="cursor:pointer"><circle r="13"/><path d="M-4.5,-4.5 L4.5,4.5 M4.5,-4.5 L-4.5,4.5"/><title>Xoá dây</title></g>`; } }
+  if(drag && drag.kind==='wire'){ const a=outPort(d.nodes.find(n=>n.id===drag.from)); h+=`<path class="temp" d="${pathD(curve(a,drag.pt))}"/>`; }
+  layer.innerHTML=h;
+  const eh=$('#emptyHint');
+  if(eh){
+    const onlyUsers = d.nodes.length===1;
+    const noEdges = d.nodes.length>1 && d.edges.length===0;
+    eh.hidden = !(onlyUsers||noEdges);
+    eh.textContent = onlyUsers ? 'Kéo thành phần từ danh sách lên board, hoặc bấm để thêm.' : 'Kéo từ chấm tròn của một node sang node khác để nối dây.';
+  }
+}
+
+function renderInspector(){
+  const n = S.design.nodes.find(x=>x.id===S.sel);
+  const side=$('#inspSide'), sheet=$('#sheet');
+  if(!n){ if(side) side.innerHTML=''; if(sheet) sheet.innerHTML=''; return; }
+  const t=TYPES[n.type], st = S.run && (!S.anim||S.anim.revealed) ? S.run.sim.st[n.id] : null;
+  let h=`<div class="insp"><div class="insp-head"><span class="chip cat-${t.cat}">${icon(n.type)}</span><b style="flex:1">${t.name}</b><button class="btn sheet-close" data-act="desel" aria-label="Đóng">✕</button></div><p>${t.desc}</p>`;
+  if(t.tiers){
+    h+=`<div class="tiers" role="group" aria-label="Tier">`+t.tiers.map((tr,i)=>{
+      const meta = [`${fmt(tr.cap)} req/s`]; if(tr.hit) meta.push(`trúng ${Math.round(tr.hit*100)}%`); meta.push(tr.per?`$${String(tr.per).replace('.',',')}/req`:`$${tr.price}`);
+      return `<button class="tier" data-tier="${i}" aria-pressed="${n.tier===i}"><b>${tr.k}</b><span>${meta.join(' · ')}</span></button>`; }).join('')+`</div>`;
+  }
+  if(t.multi) h+=`<div class="stepper"><span style="flex:1">Số máy</span><button data-count="-1" aria-label="Bớt máy">−</button><b class="mono">${n.count}</b><button data-count="1" aria-label="Thêm máy">+</button></div>`;
+  if(st && n.type!=='users') h+=`<div class="live${st.over?' bad':''}">Tải lần chạy trước: ${fmt(st.load)} / ${fmt(st.cap)} req/s</div>`;
+  if(!n.locked) h+=`<button class="btn danger" data-act="delnode">Xoá node</button>`;
+  h+=`</div>`;
+  const narrow = window.matchMedia('(max-width: 820px)').matches;
+  if(narrow){ if(sheet) sheet.innerHTML=`<div class="sheet">${h}</div>`; if(side) side.innerHTML=''; }
+  else { if(side) side.innerHTML=h; if(sheet) sheet.innerHTML=''; }
+}
+
+/* ---------- editing ---------- */
+let uid = 0;
+function newId(type){ let id; do{ id = type[0]+(++uid); }while(S.design.nodes.some(n=>n.id===id)); return id; }
+function addNode(type, x, y){
+  const n = {id:newId(type), type, tier:0, count:1, u:.5, v:.5, locked:false};
+  if(x==null){
+    const u = LAYER_U[type];
+    const vs=[.5,.28,.72,.14,.86,.39,.61];
+    let best=vs[0];
+    for(const v of vs){ const probe={...n,u,v}; const p=pos(probe); if(!S.design.nodes.some(m=>{const q=pos(m); return Math.abs(q.x-p.x)<NW+6 && Math.abs(q.y-p.y)<NH+20;})){ best=v; break; } }
+    n.u=u; n.v=best;
+    const p=pos(n); setPos(n,p.x,p.y);
+  } else setPos(n,x,y);
+  S.design.nodes.push(n); S.selEdge=null;
+  // On phones the inspector is a bottom sheet over the Run bar; only open it when the player taps a node.
+  S.sel = window.matchMedia('(max-width: 820px)').matches ? null : n.id; changed(); renderBoard(); renderMeter(); renderInspector();
+}
+function addEdge(from,to){
+  const a=S.design.nodes.find(n=>n.id===from), b=S.design.nodes.find(n=>n.id===to);
+  if(!a||!b||a===b) return;
+  if(!ALLOWED[a.type].includes(b.type)){ toast(`Không nối được ${TYPES[a.type].name} → ${TYPES[b.type].name}.${ALLOWED[a.type].length?' Nối được tới: '+ALLOWED[a.type].map(t=>TYPES[t].name).join(', ')+'.':''}`); return; }
+  const id=from+'>'+to;
+  if(S.design.edges.some(e=>e.id===id)){ toast('Hai node này đã nối với nhau.'); return; }
+  S.design.edges.push({id,from,to}); changed(); toast(`Đã nối ${TYPES[a.type].name} → ${TYPES[b.type].name}`);
+}
+function delNode(id){
+  S.design.nodes=S.design.nodes.filter(n=>n.id!==id);
+  S.design.edges=S.design.edges.filter(e=>e.from!==id&&e.to!==id);
+  if(S.sel===id) S.sel=null; changed(); renderBoard(); renderMeter(); renderInspector();
+}
+
+/* ---------- pointer handling on board ---------- */
+let drag=null;
+function toBoard(e){ const svg=$('#board'); const pt=svg.createSVGPoint(); pt.x=e.clientX; pt.y=e.clientY; const m=svg.getScreenCTM(); if(!m) return {x:0,y:0}; const p=pt.matrixTransform(m.inverse()); return {x:p.x,y:p.y}; }
+function nodeAt(p){ return S.design.nodes.slice().reverse().find(n=>{ const q=pos(n); return Math.abs(p.x-q.x)<=NW/2+4 && Math.abs(p.y-q.y)<=NH/2+4; }); }
+
+document.addEventListener('pointerdown', e=>{
+  if(S.screen!=='game' || S.running) return;
+  const svg=$('#board');
+  const pal=e.target.closest('[data-pal]');
+  if(pal){
+    e.preventDefault();
+    drag={kind:'pal', type:pal.dataset.pal, sx:e.clientX, sy:e.clientY, ghost:null};
+    return;
+  }
+  if(!svg || !svg.contains(e.target)) return;
+  const p=toBoard(e);
+  const port=e.target.closest('[data-port]');
+  const del=e.target.closest('[data-del-edge]');
+  const edge=e.target.closest('[data-edge]');
+  const nd=e.target.closest('[data-node]');
+  if(del){ S.design.edges=S.design.edges.filter(x=>x.id!==del.dataset.delEdge); S.selEdge=null; changed(); renderBoard(); renderMeter(); return; }
+  if(port){ drag={kind:'wire', from:port.dataset.port, pt:p}; svg.setPointerCapture(e.pointerId); renderBoard(); return; }
+  if(nd){ const n=S.design.nodes.find(x=>x.id===nd.dataset.node); const q=pos(n); drag={kind:'move', id:n.id, dx:p.x-q.x, dy:p.y-q.y, moved:false, sx:p.x, sy:p.y}; svg.setPointerCapture(e.pointerId); return; }
+  if(edge){ S.selEdge=edge.dataset.edge; S.sel=null; renderBoard(); renderInspector(); return; }
+  S.sel=null; S.selEdge=null; renderBoard(); renderInspector();
+});
+document.addEventListener('pointermove', e=>{
+  if(!drag) return;
+  if(drag.kind==='pal'){
+    if(!drag.ghost && Math.hypot(e.clientX-drag.sx,e.clientY-drag.sy)>6){
+      const d=TYPES[drag.type]; const g=document.createElement('div'); g.className='ghost pal'; g.innerHTML=`<span class="chip cat-${d.cat}">${icon(drag.type)}</span><b>${d.name}</b><small>thả lên board</small>`; document.body.appendChild(g); drag.ghost=g;
+    }
+    if(drag.ghost){ drag.ghost.style.left=e.clientX+'px'; drag.ghost.style.top=e.clientY+'px'; }
+    return;
+  }
+  const p=toBoard(e);
+  if(drag.kind==='wire'){ drag.pt=p; renderBoard(); }
+  if(drag.kind==='move'){
+    if(Math.hypot(p.x-drag.sx,p.y-drag.sy)>4) drag.moved=true;
+    if(drag.moved){ const n=S.design.nodes.find(x=>x.id===drag.id); setPos(n,p.x-drag.dx,p.y-drag.dy); renderBoard(); }
+  }
+});
+document.addEventListener('pointerup', e=>{
+  if(!drag) return;
+  const d=drag; drag=null;
+  if(d.kind==='pal'){
+    if(d.ghost){ d.ghost.remove(); const bw=$('#bw').getBoundingClientRect();
+      if(e.clientX>=bw.left&&e.clientX<=bw.right&&e.clientY>=bw.top&&e.clientY<=bw.bottom){ const p=toBoard(e); addNode(d.type,p.x,p.y); } }
+    else addNode(d.type);
+    return;
+  }
+  if(d.kind==='wire'){ const p=toBoard(e); const t=nodeAt(p); if(t) addEdge(d.from,t.id); renderBoard(); renderMeter(); return; }
+  if(d.kind==='move'){
+    if(d.moved) storeDesign();
+    else { S.sel=d.id; S.selEdge=null; }
+    renderBoard(); renderInspector();
+  }
+});
+document.addEventListener('pointercancel', ()=>{ if(drag?.ghost) drag.ghost.remove(); drag=null; });
+document.addEventListener('keydown', e=>{
+  if(S.screen!=='game') return;
+  if(e.key==='Enter' && e.target.closest?.('[data-node]')){ S.sel=e.target.closest('[data-node]').dataset.node; renderBoard(); renderInspector(); }
+  if((e.key==='Delete'||e.key==='Backspace') && !/INPUT|TEXTAREA/.test(e.target.tagName)){
+    if(S.selEdge){ S.design.edges=S.design.edges.filter(x=>x.id!==S.selEdge); S.selEdge=null; changed(); renderBoard(); renderMeter(); }
+    else if(S.sel){ const n=S.design.nodes.find(x=>x.id===S.sel); if(n && !n.locked) delNode(n.id); }
+  }
+  if(e.key==='Escape'){ S.sel=null; S.selEdge=null; renderBoard(); renderInspector(); }
+});
+
+/* ---------- run + animation ---------- */
+function stopAnim(){ if(S.anim){ cancelAnimationFrame(S.anim.raf); S.anim=null; } S.running=false; const fx=$('#fx'); if(fx) fx.innerHTML=''; }
+function runSim(){
+  if(S.running) return;
+  const l=S.level;
+  const sim=simulate(l,S.design), ev=evaluate(l,sim);
+  S.run={sim,ev}; S.sel=null; S.selEdge=null; renderInspector();
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduce){ S.anim=null; finishRun(); return; }
+  S.running=true;
+  const curves={}; S.design.edges.forEach(e=>curves[e.id]=edgeCurve(e));
+  let max=1; Object.values(sim.flow).forEach(f=>max=Math.max(max,f.total));
+  const parts=[], acc={};
+  const A = S.anim = {t0:performance.now(), last:performance.now(), revealed:false, stamped:false, raf:0};
+  const DUR=3.4;
+  const fall=(x,y)=>parts.push({kind:'fall',x,y,vx:(Math.random()-.5)*60,vy:-40-Math.random()*40,life:0});
+  const step=now=>{
+    const dt=Math.min(.05,(now-A.last)/1000); A.last=now; const t=(now-A.t0)/1000;
+    if(t<DUR-.6){
+      for(const e of S.design.edges){ const f=sim.flow[e.id].total; if(f<=0) continue;
+        const rate=2+12*Math.sqrt(f/max); acc[e.id]=(acc[e.id]||0)+rate*dt;
+        while(acc[e.id]>=1){ acc[e.id]-=1; parts.push({kind:'move',e:e.id,p:0,sp:1.1+Math.random()*.3}); } }
+      // route drops & users with nowhere to go
+      for(const is of sim.issues){ if(is.kind!=='route') continue; if(Math.random()<dt*8){ const n=S.design.nodes.find(x=>x.id===is.id); const q=pos(n); fall(q.x+(Math.random()-.5)*NW*.6,q.y+NH/2); } }
+    }
+    if(!A.revealed && t>1.3){ A.revealed=true; renderBoard(); }
+    if(!A.stamped && t>DUR-.4){ A.stamped=true; renderBoard(); }
+    let h='';
+    for(let i=parts.length-1;i>=0;i--){
+      const p=parts[i];
+      if(p.kind==='move'){
+        p.p+=dt*p.sp;
+        if(p.p>=1){
+          parts.splice(i,1);
+          const e=S.design.edges.find(x=>x.id===p.e), st=sim.st[e.to];
+          if(st.over && Math.random()<(1-st.ratio)){ const q=curves[p.e][3]; fall(q.x,q.y); }
+          continue;
+        }
+        const q=bez(curves[p.e],p.p); h+=`<circle class="pk" cx="${q.x.toFixed(1)}" cy="${q.y.toFixed(1)}" r="4"/>`;
+      } else {
+        p.life+=dt; p.vy+=260*dt; p.x+=p.vx*dt; p.y+=p.vy*dt;
+        if(p.life>1){ parts.splice(i,1); continue; }
+        h+=`<circle class="pk bad" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="4.5" opacity="${(1-p.life).toFixed(2)}"/>`;
+      }
+    }
+    const fx=$('#fx'); if(fx) fx.innerHTML=h;
+    if(t<DUR+.6) A.raf=requestAnimationFrame(step);
+    else { const fx2=$('#fx'); if(fx2) fx2.innerHTML=''; finishRun(); }
+  };
+  A.raf=requestAnimationFrame(step);
+}
+function finishRun(){
+  S.running=false; S.anim=null;
+  const l=S.level, {sim,ev}=S.run;
+  let unlocked=null;
+  if(ev.pass){
+    const prev=save.stars[l.id]||0;
+    if(ev.stars>prev) save.stars[l.id]=ev.stars;
+    save.used[l.id]=[...new Set(S.design.nodes.map(n=>n.type))];
+  } else {
+    const f=(save.fails[l.id]||0)+1; save.fails[l.id]=f;
+    if(f<=4) unlocked=HINT_NAMES[f-1];
+  }
+  persist();
+  S.modal={pass:ev.pass, stars:ev.stars, unlocked};
+  renderBoard(); refreshSide(); renderModal();
+}
+function renderModal(){
+  let m=$('#modal'); if(m) m.remove();
+  if(!S.modal) return;
+  const l=S.level, {sim,ev}=S.run, M=S.modal;
+  const idx=LEVELS.indexOf(l), next=LEVELS[idx+1];
+  const nextOk = next && levelUnlocked(next);
+  const div=document.createElement('div'); div.id='modal'; div.className='scrim';
+  div.innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="vd">
+    <p class="verdict ${M.pass?'pass':'fail'}" id="vd">${M.pass?`PASSED <span class="st">${'★'.repeat(M.stars)}${'☆'.repeat(3-M.stars)}</span>`:'CRASHED'}</p>
+    ${M.pass?`<p style="margin:0">Hệ thống trụ vững${M.stars<3?`. Hạ chi phí xuống $${fmt(l.stars[M.stars===1?1:0])} để thêm sao.`:' với chi phí thấp nhất.'}</p>`
+      : sim.issues.length?`<ul class="reasons">${sim.issues.slice(0,4).map(i=>`<li>${i.text}</li>`).join('')}</ul>`:''}
+    <div class="stats">
+      <div>Request thành công<b>${(sim.success*100).toFixed(sim.success>.999&&sim.success<1?2:1).replace('.',',')}%</b></div>
+      <div>Chi phí / tháng<b>$${fmt(sim.cost)}</b></div>
+    </div>
+    ${!M.pass?`<ul class="goals">${ev.goals.map(g=>`<li class="${g.ok?'ok':'no'}"><span class="dot">${g.ok?'✓':'×'}</span><span>${g.label}</span></li>`).join('')}</ul>`:''}
+    ${M.unlocked?`<div class="unlock">Đã mở gợi ý: ${M.unlocked}</div>`:''}
+    <div class="acts">
+      ${M.pass?`<button class="btn" data-act="close">Tối ưu tiếp</button>${next?(nextOk?`<button class="btn primary" data-act="next">Màn tiếp →</button>`:`<button class="btn primary" data-act="home">Về bản đồ</button>`):`<button class="btn primary" data-act="home">Về bản đồ</button>`}`
+        :`<button class="btn primary" data-act="close">Sửa thiết kế</button>`}
+    </div></div>`;
+  document.body.appendChild(div);
+  $('.acts .primary',div)?.focus();
+}
+
+/* ---------- clicks ---------- */
+document.addEventListener('click', e=>{
+  const t=e.target;
+  const lv=t.closest('[data-level]'); if(lv && !lv.disabled){ openLevel(lv.dataset.level); return; }
+  const sk=t.closest('[data-skin]'); if(sk){ save.skin=sk.dataset.skin; persist(); applySettings(); render(); return; }
+  const md=t.closest('[data-mode]'); if(md && md.tagName==='BUTTON'){ save.mode=md.dataset.mode; persist(); applySettings(); render(); return; }
+  const rs=t.closest('[data-reset]'); if(rs){ const v=rs.dataset.reset; if(v==='ask') S.confirmReset=true; else if(v==='yes'){ save={stars:{},seen:{},fails:{},used:{},designs:{},skin:save.skin,mode:save.mode}; persist(); S.confirmReset=false; toast('Đã xoá tiến trình.'); } else S.confirmReset=false; render(); return; }
+  if(t.closest('#modal') && !t.closest('.modal')){ S.modal=null; renderModal(); return; }
+  const act=t.closest('[data-act]')?.dataset.act;
+  if(act==='home'){ stopAnim(); S.modal=null; renderModal(); S.screen='home'; render(); window.scrollTo(0,0); return; }
+  if(act==='run'){ runSim(); return; }
+  if(act==='close'){ S.modal=null; renderModal(); return; }
+  if(act==='next'){ S.modal=null; renderModal(); openLevel(LEVELS[LEVELS.indexOf(S.level)+1].id); return; }
+  if(act==='desel'){ S.sel=null; renderBoard(); renderInspector(); return; }
+  if(act==='delnode'){ delNode(S.sel); return; }
+  const tier=t.closest('[data-tier]'); if(tier){ const n=S.design.nodes.find(x=>x.id===S.sel); n.tier=+tier.dataset.tier; changed(); renderBoard(); renderMeter(); renderInspector(); return; }
+  const cnt=t.closest('[data-count]'); if(cnt){ const n=S.design.nodes.find(x=>x.id===S.sel); const mx=TYPES[n.type].multi; n.count=Math.max(1,Math.min(mx,n.count+ +cnt.dataset.count)); changed(); renderBoard(); renderMeter(); renderInspector(); return; }
+  const hint=t.closest('[data-hint]'); if(hint){ const i=+hint.dataset.hint; if(i===3 && !save.seen[S.level.id]){ S.confirmSol=true; } else S.hintOpen[i]=true; refreshSide(); return; }
+  const sol=t.closest('[data-sol]'); if(sol){ if(sol.dataset.sol==='yes'){ save.seen[S.level.id]=true; persist(); S.hintOpen[3]=true; } S.confirmSol=false; refreshSide(); return; }
+});
+window.addEventListener('resize', ()=>{ if(S.screen==='game' && !drag) renderInspector(); });
+
+function render(){ if(S.screen==='home') renderHome(); else renderGame(); }
+
+function start(data){
+  applySettings();
+  if(data && data.screen==='game' && data.levelId){ openLevel(data.levelId); }
+  else render();
+}
+window.claude?.hot?.snapshot?.(()=>({screen:S.screen, levelId:S.level?.id}));
+window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+</script>
+
+</body>
+</html>
